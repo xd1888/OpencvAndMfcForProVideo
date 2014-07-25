@@ -52,6 +52,7 @@ CPlayVideoDlg::CPlayVideoDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CPlayVideoDlg::IDD, pParent)
 	, TheImage(NULL)
 	, vPath(_T(""))
+	//,m_rgbFontColor(RGB(128,128,255))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -71,6 +72,8 @@ BEGIN_MESSAGE_MAP(CPlayVideoDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_EdgeDetect_Button, &CPlayVideoDlg::OnBnClickedEdgedetectButton)
 	ON_BN_CLICKED(IDC_ReadVideo_Button, &CPlayVideoDlg::OnBnClickedReadvideoButton)
 	ON_BN_CLICKED(IDC_Play_Button, &CPlayVideoDlg::OnBnClickedPlayButton)
+	ON_WM_CTLCOLOR()
+	ON_BN_CLICKED(IDCANCEL, &CPlayVideoDlg::OnBnClickedCancel)
 END_MESSAGE_MAP()
 
 
@@ -106,6 +109,8 @@ BOOL CPlayVideoDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
+	//PaintFontColor(IDC_ShowImg);
+
 	CvSize ImgSize;
 	ImgSize.height=IMAGE_HEIGHT;
 	ImgSize.width=IMAGE_WIDTH;
@@ -290,10 +295,14 @@ void CPlayVideoDlg::OnBnClickedReadvideoButton()
 		vPath=dlg.GetPathName();
 		//使无关按钮无效
 		GetDlgItem(IDC_Play_Button)->EnableWindow(TRUE);
-		GetDlgItem(IDC_ReadImg_Button)->EnableWindow(FALSE);
+		GetDlgItem(IDC_ReadImg_Button)->EnableWindow(TRUE);
+		//重绘背景颜色 默认为蓝色
+		
 		//使第一帧的画面显示在控件上
 		CvCapture* myCapture=cvCreateFileCapture(vPath);
 		IplImage* myImage=cvQueryFrame(myCapture);
+		if (!myImage) return;
+		cvZero(TheImage); //对上一帧显示的图像数据清零
 		ResizeImage(myImage);
 		ShowImage(TheImage,IDC_ShowImg);
 		//cvReleaseImage(&myImage);
@@ -331,9 +340,10 @@ void CPlayVideoDlg::OnBnClickedPlayButton()
 	cvResizeWindow("videoSmile",1,1);
 	HWND hWnd=(HWND)cvGetWindowHandle("videoSmile");
 	HWND hParent=::GetParent(hWnd);
-	HWND hwnd1=::FindWindow("CmymfcDlg","PlayVideo");
+	HWND hwnd1=::FindWindow(NULL,"PlayVideo");
 	::SetParent(hWnd,hwnd1);
 	::ShowWindow(hParent,SW_HIDE);
+	
 
 	//读取视频文件的帧数
 	int frames=(int)cvGetCaptureProperty(pCapture,CV_CAP_PROP_FRAME_COUNT);
@@ -371,7 +381,49 @@ void CPlayVideoDlg::OnBnClickedPlayButton()
 
 	cvReleaseCapture(&pCapture);
 	cvDestroyWindow("videoSmile");
-
 	return ;
 
+}
+
+
+HBRUSH CPlayVideoDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDialogEx::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	// TODO:  在此更改 DC 的任何特性
+	
+	// TODO:  如果默认的不是所需画笔，则返回另一个画笔
+	return hbr;
+}
+
+/************************************************************************/
+/* 改变控件颜色按钮                                                                     */
+/************************************************************************/
+
+//void CPlayVideoDlg::PaintFontColor(int ID_CTL)
+//{
+//	CRect rect;
+//
+//	CWnd *pwnd=GetDlgItem(ID_CTL);
+//	pwnd->GetWindowRect(&rect);
+//	ScreenToClient(&rect);
+//	rect.DeflateRect(2,2,1,1);
+//
+//	CBrush br;
+//	br.CreateSolidBrush(m_rgbFontColor);
+//	CClientDC dc(this);
+//	dc.FillRect(&rect,&br);
+//}
+
+
+void CPlayVideoDlg::OnBnClickedCancel()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	//HWND hWnd=::FindWindow(_T("CPlayVideoDlg"),_T("videoSmile"));
+	//if (IsWindow(hWnd))
+	//{
+	//	cvDestroyWindow("videoSmile");
+	//}
+	//cvDestroyWindow("videoSmile");
+	CDialogEx::OnCancel();
 }

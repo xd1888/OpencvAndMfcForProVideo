@@ -42,4 +42,11 @@ public:
 private:
 	CString vPath;
 	int m_run;
+public:
+	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+	//void PaintFontColor(int ID_CTL);
+private:
+//	COLORREF m_rgbFontColor;
+public:
+	afx_msg void OnBnClickedCancel();
 };
